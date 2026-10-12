@@ -25,10 +25,10 @@ describe('RosaryApp', () => {
 
   it('opens on gloriosos on a Sunday and luminosos on a Thursday', () => {
     const sunday = renderApp();
-    expect(screen.getByRole('radio', { name: /Gloriosos/ })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: /^Gloriosos/ })).toHaveAttribute('aria-checked', 'true');
     sunday.unmount();
     renderApp({ today: THURSDAY });
-    expect(screen.getByRole('radio', { name: /Luminosos/ })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: /^Luminosos/ })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('shows the next step\'s prayer on "Siguiente"', () => {
@@ -67,15 +67,15 @@ describe('RosaryApp', () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: '3.ª Avemaría, tercer misterio' }));
     expect(screen.getByText('Tercer misterio glorioso: Misterio glorioso número 3')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('radio', { name: 'Dolorosos' }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Dolorosos/ }));
     expect(screen.getByText('Tercer misterio doloroso: Misterio doloroso número 3')).toBeInTheDocument();
   });
 
   it('changes the set with arrow keys inside the mystery picker', () => {
     renderApp();
-    fireEvent.keyDown(screen.getByRole('radio', { name: /Gloriosos/ }), { key: 'ArrowRight' });
-    expect(screen.getByRole('radio', { name: 'Luminosos' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByRole('radio', { name: 'Luminosos' })).toHaveFocus();
+    fireEvent.keyDown(screen.getByRole('radio', { name: /^Gloriosos/ }), { key: 'ArrowRight' });
+    expect(screen.getByRole('radio', { name: /^Luminosos/ })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: /^Luminosos/ })).toHaveFocus();
   });
 
   it('jumps to a bead\'s step when it is tapped, and walks the medal\'s steps', () => {
@@ -144,13 +144,13 @@ describe('RosaryApp', () => {
   it('returns to the same step when reopened on the same day', () => {
     const first = renderApp();
     fireEvent.click(screen.getByRole('button', { name: '1.ª Avemaría, tercer misterio' }));
-    fireEvent.click(screen.getByRole('radio', { name: 'Gozosos' }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Gozosos/ }));
     first.unmount();
 
     renderApp({ storage: first.storage });
     expect(stepTitle()).toBe('1.ª Avemaría');
     expect(counter()).toBe('Paso 29 de 69');
-    expect(screen.getByRole('radio', { name: 'Gozosos' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: /^Gozosos/ })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('works without storage', () => {

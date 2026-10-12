@@ -222,20 +222,23 @@ body {
 }
 
 .mystery-picker {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
   gap: 0.5rem;
 }
 
 .mystery-option {
   font: inherit;
   font-size: 1rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.1rem;
   min-height: 44px;
-  padding: 0.35rem 0.85rem;
-  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius);
+  text-align: left;
   border: 1.5px solid var(--marian);
   background: var(--surface);
   color: var(--marian);
@@ -246,6 +249,22 @@ body {
   background: var(--celeste);
   color: var(--ink);
   font-weight: 700;
+}
+
+.mystery-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mystery-days {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--mute);
+}
+
+.mystery-option[aria-checked='true'] .mystery-days {
+  color: var(--ink);
 }
 
 .today-tag {

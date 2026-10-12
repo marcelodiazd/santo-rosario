@@ -61,10 +61,12 @@ describe('PrayerPanel', () => {
 
   it('puts the "hoy" tag on today\'s set only', () => {
     renderPanel(10, 'luminosos');
-    const today = screen.getByRole('radio', { name: /Luminosos/ });
+    const today = screen.getByRole('radio', { name: /^Luminosos/ });
     expect(within(today).getByText('hoy')).toBeInTheDocument();
     expect(screen.getAllByText('hoy')).toHaveLength(1);
-    expect(screen.getByRole('radio', { name: 'Gloriosos' })).toHaveAttribute('aria-checked', 'true');
+    expect(within(today).getByText('jueves')).toBeInTheDocument();
+    expect(within(screen.getByRole('radio', { name: /^Gloriosos/ })).getByText('miércoles y domingo')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /^Gloriosos/ })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('shows the mystery line and note on decade and closing steps', () => {
