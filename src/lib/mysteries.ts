@@ -7,6 +7,20 @@ export function setForWeekday(sets: readonly MysterySet[], day: number): Mystery
   return set;
 }
 
+const DAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+/**
+ * The days a set is prayed, Monday first as on a Spanish calendar:
+ * "lunes y sábado", "miércoles y domingo", "jueves".
+ */
+export function weekdayNames(set: MysterySet): string {
+  const names = [...set.weekdays]
+    .sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7))
+    .map((day) => DAY_NAMES[day]);
+  if (names.length <= 1) return names.join('');
+  return `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`;
+}
+
 const ORDINALS = ['Primer', 'Segundo', 'Tercer', 'Cuarto', 'Quinto'];
 
 /** "Primer", "Segundo", ... for decades 1-5. */

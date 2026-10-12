@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeFixture } from '../test/fixture';
-import { decadeOrdinal, mysteryAdjective, mysteryLine, setForWeekday } from './mysteries';
+import { decadeOrdinal, mysteryAdjective, mysteryLine, setForWeekday, weekdayNames } from './mysteries';
 
 const { mysterySets, steps } = makeFixture();
 const setOn = (day: number) => setForWeekday(mysterySets, day).id;
@@ -46,5 +46,20 @@ describe('mystery line', () => {
     expect([1, 2, 3, 4, 5].map(decadeOrdinal)).toEqual(['Primer', 'Segundo', 'Tercer', 'Cuarto', 'Quinto']);
     expect(decadeOrdinal(6)).toBe('6.º');
     expect(mysterySets.map(mysteryAdjective)).toEqual(['gozoso', 'doloroso', 'glorioso', 'luminoso']);
+  });
+});
+
+describe('weekdayNames', () => {
+  it('names the days each set is prayed, Monday first', () => {
+    expect(mysterySets.map(weekdayNames)).toEqual([
+      'lunes y sábado',
+      'martes y viernes',
+      'miércoles y domingo',
+      'jueves',
+    ]);
+  });
+
+  it('joins three or more days with commas', () => {
+    expect(weekdayNames({ ...mysterySets[0], weekdays: [0, 2, 4] })).toBe('martes, jueves y domingo');
   });
 });

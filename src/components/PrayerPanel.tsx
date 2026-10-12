@@ -1,6 +1,6 @@
 import { useId, type KeyboardEvent } from 'react';
 import type { MysterySet, Prayer, Step } from '../data/types';
-import { mysteryLine } from '../lib/mysteries';
+import { mysteryLine, weekdayNames } from '../lib/mysteries';
 import { WPM_MAX, WPM_MIN } from '../lib/pacing';
 import { parsePrayer } from '../lib/prayerText';
 
@@ -106,8 +106,11 @@ export function PrayerPanel(props: Props) {
                 className="mystery-option"
                 onClick={() => onSelectSet(set.id)}
               >
-                {shortSetName(set)}
-                {set.id === todaySetId && <span className="today-tag">hoy</span>}
+                <span className="mystery-name">
+                  {shortSetName(set)}
+                  {set.id === todaySetId && <span className="today-tag">hoy</span>}
+                </span>
+                <span className="mystery-days">{weekdayNames(set)}</span>
               </button>
             );
           })}
