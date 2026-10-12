@@ -3,6 +3,20 @@ import type { MysterySet, Prayer, Step } from '../data/types';
 import { mysteryLine, weekdayNames } from '../lib/mysteries';
 import { WPM_MAX, WPM_MIN } from '../lib/pacing';
 import { parsePrayer } from '../lib/prayerText';
+import type { LineRef, VoiceInfo } from '../lib/speech';
+
+/** Read-aloud controls; null when the browser has no speech engine. */
+export interface SpeechControls {
+  on: boolean;
+  onToggle: (on: boolean) => void;
+  /** The device's Spanish voices. */
+  voices: readonly VoiceInfo[];
+  /** The voice the person chose; null = automatic. */
+  chosenUri: string | null;
+  onChooseVoice: (uri: string | null) => void;
+  /** The line being read, or waiting for the people's response. */
+  activeLine: LineRef | null;
+}
 
 interface Props {
   sets: readonly MysterySet[];
@@ -26,6 +40,8 @@ interface Props {
 
   traditional: boolean;
   onTraditionalChange: (on: boolean) => void;
+
+  speech?: SpeechControls | null;
 }
 
 /** "Misterios gozosos" gives "Gozosos". */
@@ -34,29 +50,36 @@ function shortSetName(set: MysterySet): string {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-export function PrayerBody({ prayer }: { prayer: Prayer }) {
+interface PrayerBodyProps {
+  prayer: Prayer;
+  /** Line to highlight while it is read aloud. */
+  activeLine?: { paragraph: number; line: number } | null;
+}
+
+export function PrayerBody({ prayer, activeLine }: PrayerBodyProps) {
   return (
     <>
       {parsePrayer(prayer.body).map((paragraph, p) => (
         <p className="prayer-paragraph" key={p}>
           {paragraph.map((line, l) => {
+            const active = activeLine?.paragraph === p && activeLine.line === l ? ' is-active' : '';
             if (line.kind === 'response') {
               return (
-                <span className="line response" key={l}>
+                <span className={`line response${active}`} key={l}>
                   {line.text}
                 </span>
               );
             }
             if (line.kind === 'litany') {
               return (
-                <span className="line litany" key={l}>
+                <span className={`line litany${active}`} key={l}>
                   <span className="invocation">{line.invocation}</span>{' '}
                   <span className="response">{line.response}</span>
                 </span>
               );
             }
             return (
-              <span className="line" key={l}>
+              <span className={`line${active}`} key={l}>
                 {line.text}
               </span>
             );
@@ -76,6 +99,10 @@ export function PrayerPanel(props: Props) {
   const jumpId = useId();
   const speedId = useId();
   const openingId = useId();
+  const voiceToggleId = useId();
+  const voicePickerId = useId();
+  const speech = props.speech ?? null;
+  const reading = speech?.on ?? false;
 
   const handleRadioKeys = (event: KeyboardEvent<HTMLDivElement>) => {
     const keys: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
@@ -146,7 +173,7 @@ export function PrayerPanel(props: Props) {
         {stepPrayers.map((prayer, i) => (
           <div className="prayer-block" key={`${prayer.id}-${i}`}>
             {stepPrayers.length > 1 && <h3 className="prayer-subtitle">{prayer.title}</h3>}
-            <PrayerBody prayer={prayer} />
+            <PrayerBody prayer={prayer} activeLine={speech?.activeLine?.prayer === i ? speech.activeLine : null} />
           </div>
         ))}
       </section>
@@ -167,9 +194,9 @@ export function PrayerPanel(props: Props) {
             className="button button--ghost"
             aria-pressed={props.playing}
             onClick={props.onTogglePlay}
-            disabled={!props.playing && index === total - 1}
+            disabled={!props.playing && !reading && index === total - 1}
           >
-            {props.playing ? 'Pausar' : 'Avance automático'}
+            {props.playing ? 'Pausar' : reading ? 'Escuchar' : 'Avance automático'}
           </button>
           <label className="speed" htmlFor={speedId}>
             <span>Velocidad: {props.wpm} palabras por minuto</span>
@@ -184,7 +211,40 @@ export function PrayerPanel(props: Props) {
             />
           </label>
         </div>
-        {props.playing && (
+        {speech && (
+          <div className="setting">
+            <input
+              id={voiceToggleId}
+              type="checkbox"
+              checked={speech.on}
+              onChange={(e) => speech.onToggle(e.target.checked)}
+            />
+            <label htmlFor={voiceToggleId}>Leer en voz alta</label>
+          </div>
+        )}
+        {reading &&
+          speech &&
+          (speech.voices.length > 0 ? (
+            <label className="voice-picker" htmlFor={voicePickerId}>
+              <span>Voz</span>
+              <select
+                id={voicePickerId}
+                value={speech.chosenUri ?? ''}
+                onChange={(e) => speech.onChooseVoice(e.target.value || null)}
+              >
+                <option value="">Automática</option>
+                {speech.voices.map((v) => (
+                  <option key={v.uri} value={v.uri}>
+                    {v.name} ({v.lang})
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <p className="hint">Este dispositivo no tiene voces en español instaladas.</p>
+          ))}
+        {reading && <p className="hint">La voz hace una pausa para que digas las respuestas.</p>}
+        {props.playing && !reading && (
           <div className="pace-bar" aria-hidden="true">
             <div
               key={`${step.seq}-${props.wpm}`}
@@ -196,13 +256,15 @@ export function PrayerPanel(props: Props) {
       </div>
 
       <div className="settings">
-        <input
-          id={openingId}
-          type="checkbox"
-          checked={props.traditional}
-          onChange={(e) => props.onTraditionalChange(e.target.checked)}
-        />
-        <label htmlFor={openingId}>Comenzar con Credo y tres Avemarías</label>
+        <div className="setting">
+          <input
+            id={openingId}
+            type="checkbox"
+            checked={props.traditional}
+            onChange={(e) => props.onTraditionalChange(e.target.checked)}
+          />
+          <label htmlFor={openingId}>Comenzar con Credo y tres Avemarías</label>
+        </div>
       </div>
 
       <footer className="credit">

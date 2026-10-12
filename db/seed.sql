@@ -131,6 +131,11 @@ R/ Para que seamos dignos de alcanzar las promesas de Nuestro Señor Jesucristo.
 'Ave María Purísima.
 R/ Sin pecado concebida.');
 
+-- Prayers said in two halves when praying in a group: the leader says the
+-- first line and everyone answers from response_line. Read-aloud uses this to
+-- leave a pause for the response.
+UPDATE prayers SET response_line = 2 WHERE id IN ('padrenuestro', 'avemaria', 'gloria');
+
 -- Mysteries. Weekdays use Date.getDay(): 0 = domingo ... 6 = sábado.
 INSERT INTO mystery_sets (id, name, weekdays, sort_order) VALUES
 ('gozosos',   'Misterios gozosos',   '1,6', 1),

@@ -5,7 +5,10 @@ export const SUNDAY = new Date(2026, 9, 11, 12);
 export const MONDAY = new Date(2026, 9, 12, 12);
 export const THURSDAY = new Date(2026, 9, 15, 12);
 
-const prayer = (id: string, title: string, body: string): [string, Prayer] => [id, { id, title, body }];
+const prayer = (id: string, title: string, body: string, responseLine: number | null = null): [string, Prayer] => [
+  id,
+  { id, title, body, responseLine },
+];
 
 /** A small RosaryData shaped like the real seed: same steps and positions, short prayer texts. */
 export function makeFixture(): RosaryData {
@@ -14,9 +17,9 @@ export function makeFixture(): RosaryData {
     prayer('contricion', 'Acto de contrición', 'Señor mío Jesucristo, Dios y hombre verdadero.'),
     prayer('invocaciones', 'Invocaciones iniciales', 'Señor, ábreme los labios.\nR/ Y mi boca proclamará tu alabanza.'),
     prayer('credo', 'Credo', 'Creo en Dios, Padre todopoderoso.'),
-    prayer('padrenuestro', 'Padrenuestro', 'Padre nuestro, que estás en el cielo.'),
-    prayer('avemaria', 'Avemaría', 'Dios te salve, María, llena eres de gracia.'),
-    prayer('gloria', 'Gloria', 'Gloria al Padre, y al Hijo, y al Espíritu Santo.'),
+    prayer('padrenuestro', 'Padrenuestro', 'Padre nuestro, que estás en el cielo.\nDanos hoy nuestro pan.', 2),
+    prayer('avemaria', 'Avemaría', 'Dios te salve, María, llena eres de gracia.\nSanta María, Madre de Dios.', 2),
+    prayer('gloria', 'Gloria', 'Gloria al Padre y al Hijo.\nComo era en el principio.', 2),
     prayer('maria_madre', 'María, Madre de gracia', 'María, Madre de gracia, Madre de misericordia.'),
     prayer('oh_jesus', 'Oh, Jesús mío', 'Oh Jesús mío, perdónanos.'),
     prayer('letanias', 'Letanías de la Santísima Virgen', 'Señor, ten piedad. | Señor, ten piedad.\n\nSanta María, | ruega por nosotros.'),
@@ -104,5 +107,48 @@ export class MemoryStorage implements Storage {
   }
   setItem(key: string, value: string) {
     this.items.set(key, String(value));
+  }
+}
+
+/** A fake speech engine: records what is spoken and lets tests finish each utterance. */
+export class FakeSpeech {
+  spoken: Array<{ text: string; voiceURI: string | null; lang: string; rate: number }> = [];
+  cancels = 0;
+  primes = 0;
+  private pending: (() => void) | null = null;
+  private listeners = new Set<() => void>();
+
+  constructor(public voices: Array<{ uri: string; name: string; lang: string; local: boolean }> = []) {}
+
+  getVoices() {
+    return this.voices;
+  }
+  onVoicesChanged(callback: () => void) {
+    this.listeners.add(callback);
+    return () => this.listeners.delete(callback);
+  }
+  setVoices(voices: FakeSpeech['voices']) {
+    this.voices = voices;
+    this.listeners.forEach((listener) => listener());
+  }
+  speak(text: string, options: { voiceURI: string | null; lang: string; rate: number }, onEnd: () => void) {
+    this.spoken.push({ text, ...options });
+    this.pending = onEnd;
+  }
+  /** Ends the utterance being spoken. */
+  finish() {
+    const onEnd = this.pending;
+    this.pending = null;
+    onEnd?.();
+  }
+  get speaking() {
+    return this.pending !== null;
+  }
+  cancel() {
+    this.cancels += 1;
+    this.pending = null;
+  }
+  prime() {
+    this.primes += 1;
   }
 }

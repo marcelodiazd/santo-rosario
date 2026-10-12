@@ -10,6 +10,15 @@ describe('readRosaryData with the real seed', () => {
     expect(data.prayers.avemaria.title).toBe('Avemaría');
   });
 
+  it('marks where the people\'s half starts in prayers said in two halves', async () => {
+    const data = await loadSeedData();
+    for (const id of ['padrenuestro', 'avemaria', 'gloria']) {
+      expect(data.prayers[id].responseLine, id).toBe(2);
+      expect(data.prayers[id].body.split('\n'), id).toHaveLength(2);
+    }
+    expect(data.prayers.senal.responseLine).toBeNull();
+  });
+
   it('loads 4 mystery sets with 5 mysteries each, in sort order', async () => {
     const data = await loadSeedData();
     expect(data.mysterySets.map((s) => s.id)).toEqual(['gozosos', 'dolorosos', 'gloriosos', 'luminosos']);

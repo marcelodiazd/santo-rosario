@@ -1,13 +1,15 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MemoryStorage, SUNDAY, THURSDAY, makeFixture } from '../test/fixture';
+import { FakeSpeech, MemoryStorage, SUNDAY, THURSDAY, makeFixture } from '../test/fixture';
 import { RosaryApp } from './RosaryApp';
 
 const data = makeFixture();
 
-function renderApp(options: { today?: Date; storage?: Storage | null } = {}) {
+function renderApp(options: { today?: Date; storage?: Storage | null; speech?: FakeSpeech | null } = {}) {
   const storage = options.storage === undefined ? new MemoryStorage() : options.storage;
-  const result = render(<RosaryApp data={data} today={options.today ?? SUNDAY} storage={storage} />);
+  const result = render(
+    <RosaryApp data={data} today={options.today ?? SUNDAY} storage={storage} speech={options.speech ?? null} />,
+  );
   return { ...result, storage };
 }
 
@@ -157,5 +159,103 @@ describe('RosaryApp', () => {
     renderApp({ storage: null });
     fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
     expect(counter()).toBe('Paso 2 de 69');
+  });
+});
+
+describe('RosaryApp read-aloud', () => {
+  const VOICES = [
+    { uri: 'en', name: 'Samantha', lang: 'en-US', local: true },
+    { uri: 'es', name: 'Mónica', lang: 'es-ES', local: true },
+    { uri: 'mx', name: 'Paulina', lang: 'es-MX', local: true },
+  ];
+
+  function renderWithVoice(storage: Storage = new MemoryStorage()) {
+    const speech = new FakeSpeech(VOICES);
+    const result = renderApp({ speech, storage });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Leer en voz alta' }));
+    return { ...result, speech };
+  }
+
+  const activeLine = () => document.querySelector('.line.is-active')?.textContent;
+
+  it('hides read-aloud where the browser has no voice engine', () => {
+    renderApp({ speech: null });
+    expect(screen.queryByRole('checkbox', { name: 'Leer en voz alta' })).toBeNull();
+  });
+
+  it('reads the step aloud and moves on when the voice finishes', () => {
+    const { speech } = renderWithVoice();
+    fireEvent.click(screen.getByRole('button', { name: 'Escuchar' }));
+    expect(speech.primes).toBe(1);
+    expect(speech.spoken.map((s) => s.text)).toEqual(['Por la señal de la Santa Cruz.']);
+    expect(speech.spoken[0]).toMatchObject({ voiceURI: 'es', lang: 'es-ES', rate: 0.85 });
+    expect(activeLine()).toBe('Por la señal de la Santa Cruz.');
+
+    act(() => speech.finish());
+    expect(stepTitle()).toBe('Acto de contrición');
+    expect(speech.spoken.at(-1)?.text).toBe('Señor mío Jesucristo, Dios y hombre verdadero.');
+  });
+
+  it('pauses on the people\'s half of the Avemaría, highlighting it', () => {
+    vi.useFakeTimers();
+    const { speech } = renderWithVoice();
+    fireEvent.click(screen.getByRole('button', { name: '1.ª Avemaría, primer misterio' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Escuchar' }));
+    expect(speech.spoken.at(-1)?.text).toBe('Dios te salve, María, llena eres de gracia.');
+
+    act(() => speech.finish());
+    expect(activeLine()).toBe('Santa María, Madre de Dios.');
+    expect(speech.speaking).toBe(false);
+
+    act(() => vi.advanceTimersByTime(3000));
+    expect(stepTitle()).toBe('2.ª Avemaría');
+    expect(speech.speaking).toBe(true);
+  });
+
+  it('stops the voice when a bead is tapped', () => {
+    const { speech } = renderWithVoice();
+    fireEvent.click(screen.getByRole('button', { name: 'Escuchar' }));
+    fireEvent.click(screen.getByRole('button', { name: '2.ª Avemaría, primer misterio' }));
+    expect(speech.cancels).toBeGreaterThan(0);
+    expect(speech.speaking).toBe(false);
+    expect(screen.getByRole('button', { name: 'Escuchar' })).toHaveAttribute('aria-pressed', 'false');
+    expect(activeLine()).toBeUndefined();
+  });
+
+  it('reads the last step and then stops', () => {
+    const { speech } = renderWithVoice();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Ir a…' }), { target: { value: '68' } });
+    const listen = screen.getByRole('button', { name: 'Escuchar' });
+    expect(listen).toBeEnabled();
+    fireEvent.click(listen);
+    expect(speech.spoken.at(-1)?.text).toBe('Ave María Purísima.');
+  });
+
+  it('lists only Spanish voices and remembers the choice', () => {
+    const storage = new MemoryStorage();
+    const first = renderWithVoice(storage);
+    const picker = screen.getByRole('combobox', { name: 'Voz' });
+    expect([...picker.querySelectorAll('option')].map((o) => o.textContent)).toEqual([
+      'Automática',
+      'Mónica (es-ES)',
+      'Paulina (es-MX)',
+    ]);
+    fireEvent.change(picker, { target: { value: 'mx' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Escuchar' }));
+    expect(first.speech.spoken.at(-1)).toMatchObject({ voiceURI: 'mx', lang: 'es-MX' });
+    first.unmount();
+
+    renderApp({ storage, speech: new FakeSpeech(VOICES) });
+    expect(screen.getByRole('checkbox', { name: 'Leer en voz alta' })).toBeChecked();
+    expect(screen.getByRole('combobox', { name: 'Voz' })).toHaveValue('mx');
+  });
+
+  it('shows voices that load after the page', () => {
+    const speech = new FakeSpeech([]);
+    renderApp({ speech });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Leer en voz alta' }));
+    expect(screen.getByText('Este dispositivo no tiene voces en español instaladas.')).toBeInTheDocument();
+    act(() => speech.setVoices(VOICES));
+    expect(screen.getByRole('combobox', { name: 'Voz' })).toBeInTheDocument();
   });
 });

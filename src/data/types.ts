@@ -4,6 +4,11 @@ export interface Prayer {
   title: string;
   /** Body in the format described in README: blank line = paragraph, `R/ ` = response, `|` = litany. */
   body: string;
+  /**
+   * For prayers said in two halves: the line (from 1, across the whole body)
+   * where the people's half starts. Null when the prayer is not split.
+   */
+  responseLine: number | null;
 }
 
 /** A set of five mysteries (gozosos, dolorosos, gloriosos, luminosos). */

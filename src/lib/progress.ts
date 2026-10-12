@@ -9,6 +9,10 @@ export interface Progress {
   setId: string | null;
   traditional: boolean;
   wpm: number;
+  /** Read the prayers aloud. */
+  voice: boolean;
+  /** Chosen voice; null = pick the best Spanish voice automatically. */
+  voiceURI: string | null;
   /** Local calendar date (YYYY-MM-DD) this progress belongs to. */
   date: string;
 }
@@ -25,7 +29,15 @@ export function localDateKey(date: Date): string {
 }
 
 export function defaultProgress(today: Date): Progress {
-  return { seq: null, setId: null, traditional: false, wpm: WPM_DEFAULT, date: localDateKey(today) };
+  return {
+    seq: null,
+    setId: null,
+    traditional: false,
+    wpm: WPM_DEFAULT,
+    voice: false,
+    voiceURI: null,
+    date: localDateKey(today),
+  };
 }
 
 /** window.localStorage, or null where reading it throws (private mode, blocked storage). */
@@ -39,7 +51,7 @@ export function browserStorage(): Storage | null {
 
 /**
  * Loads saved progress. A save from an earlier day keeps the settings
- * (traditional, wpm) but restarts at the first step with today's set.
+ * (traditional, wpm, voice) but restarts at the first step with today's set.
  * Missing, corrupt or unreadable storage gives the defaults.
  */
 export function loadProgress(storage: Storage | null, today: Date): Progress {
@@ -54,13 +66,15 @@ export function loadProgress(storage: Storage | null, today: Date): Progress {
 
     const traditional = typeof s.traditional === 'boolean' ? s.traditional : fallback.traditional;
     const wpm = typeof s.wpm === 'number' ? clampWpm(s.wpm) : fallback.wpm;
-    if (s.date !== fallback.date) return { ...fallback, traditional, wpm };
+    const voice = typeof s.voice === 'boolean' ? s.voice : fallback.voice;
+    const voiceURI = typeof s.voiceURI === 'string' ? s.voiceURI : fallback.voiceURI;
+    const settings = { traditional, wpm, voice, voiceURI };
+    if (s.date !== fallback.date) return { ...fallback, ...settings };
 
     return {
       seq: typeof s.seq === 'number' ? s.seq : null,
       setId: typeof s.setId === 'string' ? s.setId : null,
-      traditional,
-      wpm,
+      ...settings,
       date: fallback.date,
     };
   } catch {

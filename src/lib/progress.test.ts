@@ -12,19 +12,37 @@ describe('progress', () => {
 
   it('round-trips a save on the same day', () => {
     const storage = new MemoryStorage();
-    const saved = { seq: 305, setId: 'dolorosos', traditional: true, wpm: 130, date: localDateKey(SUNDAY) };
+    const saved = {
+      seq: 305,
+      setId: 'dolorosos',
+      traditional: true,
+      wpm: 130,
+      voice: true,
+      voiceURI: 'voz-monica',
+      date: localDateKey(SUNDAY),
+    };
     saveProgress(storage, saved);
     expect(loadProgress(storage, SUNDAY)).toEqual(saved);
   });
 
   it('resets the step and set on a new day but keeps the settings', () => {
     const storage = new MemoryStorage();
-    saveProgress(storage, { seq: 305, setId: 'dolorosos', traditional: true, wpm: 130, date: localDateKey(SUNDAY) });
+    saveProgress(storage, {
+      seq: 305,
+      setId: 'dolorosos',
+      traditional: true,
+      wpm: 130,
+      voice: true,
+      voiceURI: 'voz-monica',
+      date: localDateKey(SUNDAY),
+    });
     expect(loadProgress(storage, MONDAY)).toEqual({
       seq: null,
       setId: null,
       traditional: true,
       wpm: 130,
+      voice: true,
+      voiceURI: 'voz-monica',
       date: localDateKey(MONDAY),
     });
   });
@@ -46,7 +64,7 @@ describe('progress', () => {
     const storage = new MemoryStorage();
     storage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ seq: 'x', setId: 3, traditional: 'yes', wpm: 500, date: localDateKey(SUNDAY) }),
+      JSON.stringify({ seq: 'x', setId: 3, traditional: 'yes', wpm: 500, voice: 1, voiceURI: 7, date: localDateKey(SUNDAY) }),
     );
     expect(loadProgress(storage, SUNDAY)).toEqual({ ...defaultProgress(SUNDAY), wpm: 160 });
   });

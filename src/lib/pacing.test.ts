@@ -21,8 +21,8 @@ describe('pacing', () => {
 
   it('sums the prayers in a step', () => {
     const prayers = [
-      { id: 'a', title: 'A', body: sixty },
-      { id: 'b', title: 'B', body: 'Amén.' },
+      { id: 'a', title: 'A', body: sixty, responseLine: null },
+      { id: 'b', title: 'B', body: 'Amén.', responseLine: null },
     ];
     expect(stepSeconds(prayers, 120)).toBeCloseTo(34);
   });

@@ -34,9 +34,9 @@ function splitList(value: SqlValue): string[] {
  */
 export function readRosaryData(db: Database): RosaryData {
   const prayers: Record<string, Prayer> = {};
-  for (const row of queryRows(db, 'SELECT id, title, body FROM prayers')) {
+  for (const row of queryRows(db, 'SELECT id, title, body, response_line FROM prayers')) {
     const id = text(row.id);
-    prayers[id] = { id, title: text(row.title), body: text(row.body) };
+    prayers[id] = { id, title: text(row.title), body: text(row.body), responseLine: intOrNull(row.response_line) };
   }
 
   const mysterySets: MysterySet[] = queryRows(

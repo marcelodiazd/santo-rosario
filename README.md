@@ -18,6 +18,10 @@ It is hosted on GitHub Pages at a subdomain of the parish's Squarespace domain, 
   `public/rosario.sqlite` before every dev run, test run and build.
 - At runtime, `src/data/loadDb.ts` fetches the database and `src/data/repository.ts` reads it once
   into a typed `RosaryData` object. React renders only from that object.
+- **Read-aloud** uses the browser's built-in voices (Web Speech API), so there is nothing to
+  download or pay for. The voice reads the leader's part and leaves a silent pause for the people's
+  responses, highlighting the line. Voice quality depends on the device; on iPhone, Settings →
+  Accessibility → Spoken Content → Voices → Spanish offers better "enhanced" voices.
 - Each browser saves its position, mystery set, speed and settings in `localStorage` under the key
   `santo-rosario:v1`. On a new day, the app starts again at the first step with that day's mysteries.
 
@@ -25,7 +29,7 @@ It is hosted on GitHub Pages at a subdomain of the parish's Squarespace domain, 
 | --- | --- |
 | `db/` | Schema and seed data (prayers, mysteries, the 75 steps) |
 | `src/data/` | Types, the browser database loader, typed queries |
-| `src/lib/` | Pure logic: sequence and navigation, mysteries of the day, prayer text parsing, pacing, bead geometry, saved progress |
+| `src/lib/` | Pure logic: sequence and navigation, mysteries of the day, prayer text parsing, pacing, bead geometry, saved progress, read-aloud |
 | `src/components/` | `RosaryApp` (state and layout), `RosaryView` (SVG rosary), `PrayerPanel` (text and controls) |
 | `.github/workflows/ci.yml` | Compile, test, build, dependency audit, CodeQL, Gitleaks, deploy to GitHub Pages |
 
@@ -48,6 +52,8 @@ Requires Node.js 22. Run `npm ci` first to install the exact versions in `packag
    - A blank line starts a new paragraph; a newline starts a new line.
    - A line starting with `R/ ` is the people's response. It is shown in italics, without the `R/`.
    - A line containing `|` is a litany line: `invocation | response`.
+   - For prayers said in two halves (Padrenuestro, Avemaría, Gloria), `response_line` is the line
+     where the people's half starts. Read-aloud pauses there instead of reading it.
 2. Run `npm test`. The tests rebuild the database from the seed and check, among other things, that
    every step's prayers exist and that there are 69 steps (75 with the traditional opening).
 3. Open a pull request. CI must be green before it can merge.

@@ -3,7 +3,10 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE prayers (
   id    TEXT PRIMARY KEY,
   title TEXT NOT NULL,
-  body  TEXT NOT NULL
+  body  TEXT NOT NULL,
+  -- For prayers said in two halves (leader, then everyone): the line, counted
+  -- from 1 across the whole body, where the people's half starts. NULL = no split.
+  response_line INTEGER CHECK (response_line >= 1)
 );
 
 CREATE TABLE mystery_sets (
