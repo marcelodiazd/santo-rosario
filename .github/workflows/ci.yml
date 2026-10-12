@@ -109,30 +109,33 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # The domain is on Squarespace, which cannot host uploaded files, so the site
+  # is published to GitHub Pages and a Squarespace DNS record (CNAME) points a
+  # subdomain at it. The custom domain is set in Settings -> Pages, not here.
   deploy:
-    name: Deploy to virgendelaasuncion.org
+    name: Deploy to GitHub Pages
     needs: [build-test, audit, codeql, secrets]
     if: >-
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
       vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     concurrency:
-      group: deploy-production
+      group: pages
       cancel-in-progress: false
     environment:
-      name: production
-      url: https://virgendelaasuncion.org/rosario/
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: site
           path: dist
-      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - uses: actions/upload-pages-artifact@v3
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
-          local-dir: ./dist/
-          server-dir: ${{ vars.FTP_SERVER_DIR }}
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4

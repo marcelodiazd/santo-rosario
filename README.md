@@ -6,8 +6,8 @@ step's prayer. The prayer text and order follow
 [elsantorosario.es: Cómo rezar el Rosario](https://www.elsantorosario.es/como-rezar-el-rosario/)
 (Radio María España).
 
-It is built for `virgendelaasuncion.org/rosario/`, but it runs from any folder on any host that
-serves files.
+It is hosted on GitHub Pages at a subdomain of the parish's Squarespace domain, for example
+`rosario.virgendelaasuncion.org`. It runs from any folder on any host that serves files.
 
 ## How it works
 
@@ -27,7 +27,7 @@ serves files.
 | `src/data/` | Types, the browser database loader, typed queries |
 | `src/lib/` | Pure logic: sequence and navigation, mysteries of the day, prayer text parsing, pacing, bead geometry, saved progress |
 | `src/components/` | `RosaryApp` (state and layout), `RosaryView` (SVG rosary), `PrayerPanel` (text and controls) |
-| `.github/workflows/ci.yml` | Compile, test, build, dependency audit, CodeQL, Gitleaks, deploy |
+| `.github/workflows/ci.yml` | Compile, test, build, dependency audit, CodeQL, Gitleaks, deploy to GitHub Pages |
 
 ## Run it
 
@@ -54,32 +54,52 @@ Requires Node.js 22. Run `npm ci` first to install the exact versions in `packag
 
 ## Deploy
 
+The domain is on Squarespace. Squarespace only serves its own site builder and cannot host
+uploaded files, so the app is published to **GitHub Pages**. A DNS record in Squarespace points a
+subdomain at it, and the Squarespace site links to that subdomain or embeds it.
+
 CI runs on every push and pull request to `main`, and once a week. After all checks pass, the deploy
-job uploads `dist/` by FTPS. It runs only on `main`, and only after you switch it on.
+job publishes `dist/` to GitHub Pages. It runs only on `main`, and only after you switch it on.
 
-### Switch on deploy
+### Switch on deploy (once)
 
-1. Add the FTP secrets. Each command prompts for the value, so it never lands in your shell history:
-   - `gh secret set FTP_SERVER --repo marcelodiazd/santo-rosario` (host name only, for example `ftp.virgendelaasuncion.org`)
-   - `gh secret set FTP_USERNAME --repo marcelodiazd/santo-rosario`
-   - `gh secret set FTP_PASSWORD --repo marcelodiazd/santo-rosario`
-2. Set the target folder (it must end with `/`) and the protocol:
-   - `gh variable set FTP_SERVER_DIR --body "/public_html/rosario/" --repo marcelodiazd/santo-rosario`
-   - `gh variable set FTP_PROTOCOL --body "ftps" --repo marcelodiazd/santo-rosario` (use `ftp` only if the host has no FTPS)
-3. Turn deploy on: `gh variable set DEPLOY_ENABLED --body true --repo marcelodiazd/santo-rosario`
-4. Run it with `gh workflow run CI/CD --repo marcelodiazd/santo-rosario`, or push to `main`.
-5. Open <https://virgendelaasuncion.org/rosario/> and check that the rosary loads.
+1. **Turn on GitHub Pages.** In the repo, open **Settings → Pages** and set **Source** to
+   **GitHub Actions**.
+2. **Turn deploy on:** `gh variable set DEPLOY_ENABLED --body true --repo marcelodiazd/santo-rosario`.
+   You can also add it under **Settings → Secrets and variables → Actions → Variables**.
+3. **Run it:** use `gh workflow run CI/CD --repo marcelodiazd/santo-rosario`, push to `main`, or
+   click **Run workflow** on the Actions tab. The site appears at
+   <https://marcelodiazd.github.io/santo-rosario/>.
 
-Some hosts are site builders with no file access, such as Wix or Squarespace. For those, deploy to
-GitHub Pages instead and embed the app with the iframe below. Only the deploy job changes.
+### Use your own domain (once)
 
-### Link it from the parish site
+1. **Add a DNS record in Squarespace.** Open **Domains → virgendelaasuncion.org → DNS settings** and
+   add a custom record. If the domain's DNS is managed somewhere else, add it there instead.
 
-Add a menu item pointing to `/rosario/`, or paste this into an HTML block on an existing page:
+   | Type | Host | Data |
+   | --- | --- | --- |
+   | CNAME | `rosario` | `marcelodiazd.github.io` |
+
+2. **Tell GitHub the domain.** In **Settings → Pages → Custom domain**, enter
+   `rosario.virgendelaasuncion.org` and save. When the DNS check passes, tick **Enforce HTTPS**.
+   DNS changes can take up to a day.
+3. **Open <https://rosario.virgendelaasuncion.org>** and check that the rosary loads.
+
+Because the deploy uses GitHub's Pages actions, the custom domain lives in the Pages settings. No
+`CNAME` file is needed, and deploys will not reset it.
+
+### Link it from the Squarespace site
+
+Add a navigation link to `https://rosario.virgendelaasuncion.org`, or embed it on a page with a
+Code Block:
 
 ```html
-<iframe src="/rosario/" title="Santo Rosario" style="width:100%;height:90vh;border:0"></iframe>
+<iframe src="https://rosario.virgendelaasuncion.org" title="Santo Rosario" style="width:100%;height:90vh;border:0"></iframe>
 ```
+
+Embed the subdomain address, not the `github.io` one. The subdomain belongs to the same site as the
+Squarespace page, so the browser keeps each person's saved place. Inside a frame from another site,
+Safari on iPhone blocks that storage.
 
 ### Protect `main` (once, in GitHub settings)
 

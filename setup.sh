@@ -12,6 +12,6 @@ npm ci               # exact versions from package-lock.json
 npm test -- --run    # unit tests once
 npm run build        # type-check and production build into dist/
 
-# Deploy stays off until the FTP secrets are set (see README, "Switch on deploy").
+# Deploy stays off until GitHub Pages is turned on (see README, "Switch on deploy").
 gh variable set DEPLOY_ENABLED --body false --repo "$REPO"
 echo "Pipeline: https://github.com/$REPO/actions"
