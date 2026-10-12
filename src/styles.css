@@ -1,0 +1,475 @@
+/* Santo Rosario: design tokens, light and dark themes, responsive layout. */
+
+:root {
+  --marian: #1e3a6e;
+  --celeste: #a9c4e4;
+  --gold: #b08a3e;
+  /* Gold for text. --gold is 3.2:1 on white, under the 4.5:1 needed for body text. */
+  --gold-ink: #86672a;
+  --paper: #f5f8fc;
+  --surface: #ffffff;
+  --ink: #18213a;
+  --mute: #5b6782;
+
+  --font-prayer: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --font-ui: 'Alegreya Sans', system-ui, sans-serif;
+
+  --radius: 10px;
+  --gutter: 1.25rem;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --marian: #8fb0e0;
+    --celeste: #2a4673;
+    --gold: #d4b26a;
+    --gold-ink: #d4b26a;
+    --paper: #0e1626;
+    --surface: #16213a;
+    --ink: #e8edf7;
+    --mute: #a3aec6;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  -webkit-text-size-adjust: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Layout ------------------------------------------------------------------ */
+
+.app {
+  display: grid;
+  grid-template-columns: minmax(280px, 40%) 1fr;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.rosary-column {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rosary {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+}
+
+.panel-column {
+  padding: max(1.5rem, env(safe-area-inset-top)) max(var(--gutter), env(safe-area-inset-right))
+    max(2rem, env(safe-area-inset-bottom)) var(--gutter);
+  min-width: 0;
+}
+
+.panel {
+  max-width: 34em;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+@media (max-width: 719.98px) {
+  .app {
+    display: block;
+  }
+
+  .rosary-column {
+    height: 40vh;
+    height: 40dvh;
+    z-index: 1;
+    background: var(--paper);
+    border-bottom: 1px solid color-mix(in srgb, var(--marian) 18%, transparent);
+    padding: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right)) 0.5rem
+      max(0.5rem, env(safe-area-inset-left));
+  }
+
+  .panel-column {
+    padding-top: 1.25rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .panel {
+    margin: 0 auto;
+  }
+}
+
+/* Rosary drawing ---------------------------------------------------------- */
+
+.cord ellipse,
+.cord line {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1.5;
+}
+
+.node .shape {
+  fill: var(--surface);
+  stroke: var(--marian);
+  stroke-width: 1.5;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+.node .hit {
+  fill: transparent;
+  stroke: none;
+}
+
+.node[role='button'] {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.node:focus {
+  outline: none;
+}
+
+.node:focus-visible .hit {
+  stroke: var(--gold);
+  stroke-width: 2;
+}
+
+.node.is-done .shape {
+  fill: var(--marian);
+}
+
+.node.is-current .shape {
+  fill: var(--gold);
+  stroke: var(--gold);
+}
+
+.node.is-unused {
+  opacity: 0.35;
+}
+
+.node.is-unused .shape {
+  stroke-dasharray: 2 2;
+}
+
+.node.is-loading .shape {
+  stroke: var(--mute);
+}
+
+.monogram {
+  font-family: var(--font-prayer);
+  font-weight: 600;
+  font-size: 17px;
+  fill: var(--marian);
+  pointer-events: none;
+  user-select: none;
+}
+
+.node.is-done .monogram,
+.node.is-current .monogram {
+  fill: var(--surface);
+}
+
+.halo {
+  fill: none;
+  stroke: var(--gold);
+  stroke-opacity: 0.35;
+  stroke-width: 3;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: halo-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes halo-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    stroke-opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.12);
+    stroke-opacity: 0.2;
+  }
+}
+
+/* Panel ------------------------------------------------------------------- */
+
+.app-title {
+  font-family: var(--font-prayer);
+  font-weight: 600;
+  font-size: 1.6rem;
+  color: var(--marian);
+  margin: 0 0 0.75rem;
+}
+
+.mystery-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mystery-option {
+  font: inherit;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--marian);
+  background: var(--surface);
+  color: var(--marian);
+  cursor: pointer;
+}
+
+.mystery-option[aria-checked='true'] {
+  background: var(--celeste);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.today-tag {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.2rem 0.4rem;
+  border-radius: 999px;
+  background: var(--marian);
+  color: var(--surface);
+}
+
+.progress-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  color: var(--mute);
+}
+
+.jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+.jump select {
+  font: inherit;
+  min-height: 44px;
+  max-width: 14rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--mute);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.progress-bar,
+.pace-bar {
+  height: 4px;
+  margin-top: 0.5rem;
+  border-radius: 2px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--marian) 15%, transparent);
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--marian);
+  transition: width 0.25s ease;
+}
+
+.pace-fill {
+  height: 100%;
+  width: 0;
+  background: var(--gold);
+  animation-name: pace-grow;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes pace-grow {
+  to {
+    width: 100%;
+  }
+}
+
+.prayer {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem 1.5rem;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.step-title {
+  font-family: var(--font-prayer);
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--marian);
+  margin: 0;
+}
+
+.mystery-line {
+  font-family: var(--font-prayer);
+  font-size: 1.15rem;
+  font-style: italic;
+  margin: 0.35rem 0 0;
+}
+
+.step-note {
+  color: var(--mute);
+  margin: 0.35rem 0 0;
+}
+
+.prayer-subtitle {
+  font-family: var(--font-prayer);
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--marian);
+  margin: 1.25rem 0 0;
+}
+
+.prayer-paragraph {
+  font-family: var(--font-prayer);
+  font-size: 1.25rem;
+  line-height: 1.6;
+  margin: 0.9rem 0 0;
+}
+
+.line {
+  display: block;
+}
+
+.response {
+  font-style: italic;
+  color: var(--gold-ink);
+}
+
+.litany {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.5em;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.nav-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.pacing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.speed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--mute);
+  flex: 1 1 12rem;
+}
+
+.speed input {
+  width: 100%;
+  accent-color: var(--marian);
+}
+
+.button {
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 500;
+  min-height: 48px;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--marian);
+  background: var(--surface);
+  color: var(--marian);
+  cursor: pointer;
+}
+
+.button--primary {
+  background: var(--marian);
+  color: var(--surface);
+}
+
+.button--ghost[aria-pressed='true'] {
+  background: var(--celeste);
+  color: var(--ink);
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.settings {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+}
+
+.settings input {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--marian);
+}
+
+.credit {
+  color: var(--mute);
+  font-size: 0.9rem;
+}
+
+.credit a {
+  color: var(--marian);
+}
+
+.status-message {
+  font-family: var(--font-prayer);
+  font-size: 1.25rem;
+}
+
+.status-message p {
+  margin: 0 0 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .halo {
+    animation: none;
+  }
+
+  .node .shape,
+  .progress-fill {
+    transition: none;
+  }
+}
