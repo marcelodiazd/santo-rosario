@@ -39,6 +39,11 @@
   box-sizing: border-box;
 }
 
+html {
+  /* 18px base: every rem-sized text and control on the right scales with it. */
+  font-size: 112.5%;
+}
+
 html,
 body {
   margin: 0;
@@ -117,6 +122,15 @@ body {
 
   .panel {
     margin: 0 auto;
+  }
+
+  /* More specific than the base rules further down, which would otherwise win. */
+  .panel .prayer-paragraph {
+    font-size: 1.375rem;
+  }
+
+  .panel .step-title {
+    font-size: 1.625rem;
   }
 }
 
@@ -345,14 +359,14 @@ body {
 .step-title {
   font-family: var(--font-prayer);
   font-weight: 600;
-  font-size: 1.75rem;
+  font-size: 1.875rem;
   color: var(--marian);
   margin: 0;
 }
 
 .mystery-line {
   font-family: var(--font-prayer);
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-style: italic;
   margin: 0.35rem 0 0;
 }
@@ -365,14 +379,14 @@ body {
 .prayer-subtitle {
   font-family: var(--font-prayer);
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: var(--marian);
   margin: 1.25rem 0 0;
 }
 
 .prayer-paragraph {
   font-family: var(--font-prayer);
-  font-size: 1.375rem;
+  font-size: 1.5rem;
   line-height: 1.6;
   margin: 0.9rem 0 0;
 }
